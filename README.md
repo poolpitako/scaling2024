@@ -17,4 +17,5 @@ It uses the deposited capital in the yearn vault as collateral in a money market
 
 
 Test it at https://card.builtby.mom
+
 Talk about it at https://t.me/+utHQJPm-uqBlMWE5
