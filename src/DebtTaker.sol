@@ -101,7 +101,13 @@ contract DebtTaker is ReentrancyGuard {
     // if there is debt, it might cause a liquidation
     function withdraw(uint256 _amount) external onlyManager nonReentrant {
         uint256 _shares = vault.convertToShares(_amount);
-        ajnaPool.repayDebt(address(this), 0, _shares, address(this), 0);
+        ajnaPool.repayDebt(
+            address(this),
+            0,
+            _shares,
+            address(this),
+            _lupIndex()
+        );
 
         vault.withdraw(_amount, manager, address(this));
         emit Withdrawn(manager, _amount);
@@ -111,7 +117,13 @@ contract DebtTaker is ReentrancyGuard {
         // If there is collateral in ajna, try to withdraw
         (, uint256 _collateral, , ) = _positionInfo();
         if (_collateral > 0) {
-            ajnaPool.repayDebt(address(this), 0, _collateral, address(this), 0);
+            ajnaPool.repayDebt(
+                address(this),
+                0,
+                _collateral,
+                address(this),
+                _lupIndex()
+            );
         }
 
         // Withdraw underlying from vault
@@ -134,8 +146,13 @@ contract DebtTaker is ReentrancyGuard {
             _amountToRepay
         );
 
-        // TODO: check if 0 as limit works, if not, summer uses _lupIndex
-        ajnaPool.repayDebt(address(this), _amountToRepay, 0, address(this), 0);
+        ajnaPool.repayDebt(
+            address(this),
+            _amountToRepay,
+            0,
+            address(this),
+            _lupIndex()
+        );
 
         emit DebtRepaid(_amountToRepay);
     }
@@ -155,6 +172,10 @@ contract DebtTaker is ReentrancyGuard {
         token.safeTransfer(recipient, _amountToTransfer);
 
         emit Rebalanced(_desiredAmount, _amountToTransfer);
+    }
+
+    function lupIndex() external view returns (uint256) {
+        return _lupIndex();
     }
 
     function _lupIndex() internal view returns (uint256) {

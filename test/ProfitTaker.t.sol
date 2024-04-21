@@ -7,9 +7,13 @@ import "../utils/vyperDeployer.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-
 interface IProfitTakerFactory {
-    function newProfitTaker(address vault, address recipient, address manager, uint256 threshold) external returns (ProfitTaker);
+    function newProfitTaker(
+        address vault,
+        address recipient,
+        address manager,
+        uint256 threshold
+    ) external returns (ProfitTaker);
 }
 
 contract ProfitTakerTest is Test {
@@ -17,7 +21,8 @@ contract ProfitTakerTest is Test {
     ProfitTaker public originalProfitTaker;
     ProfitTaker public profitTaker;
     IProfitTakerFactory public profitTakerFactory;
-    IERC4626 public vault = IERC4626(0x83F20F44975D03b1b09e64809B757c47f942BEeA); //sDAI
+    IERC4626 public vault =
+        IERC4626(0x83F20F44975D03b1b09e64809B757c47f942BEeA); //sDAI
     address public dai = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address public recipient = vm.addr(2);
     address public manager = vm.addr(3);
@@ -25,8 +30,18 @@ contract ProfitTakerTest is Test {
 
     function setUp() public {
         originalProfitTaker = new ProfitTaker();
-        profitTakerFactory = IProfitTakerFactory(deployer.deployContract('ProfitTakerFactory', abi.encode(originalProfitTaker)));
-        profitTaker = profitTakerFactory.newProfitTaker(address(vault), recipient, manager, threshold);
+        profitTakerFactory = IProfitTakerFactory(
+            deployer.deployContract(
+                "ProfitTakerFactory",
+                abi.encode(originalProfitTaker)
+            )
+        );
+        profitTaker = profitTakerFactory.newProfitTaker(
+            address(vault),
+            recipient,
+            manager,
+            threshold
+        );
     }
 
     function testChangeRecipient() public {
@@ -53,7 +68,7 @@ contract ProfitTakerTest is Test {
         uint256 vaultBalance = vault.balanceOf(address(profitTaker));
 
         // +10 to avoid might be rounding errors
-        assertGe(vault.convertToAssets(vaultBalance)+10, 1_000 ether);
+        assertGe(vault.convertToAssets(vaultBalance) + 10, 1_000 ether);
         vm.stopPrank();
 
         // current balance of desired token is 0 in the recipient contract
@@ -64,7 +79,10 @@ contract ProfitTakerTest is Test {
         // this function could be called by anyone
         profitTaker.rebalance();
 
-        assertEq(IERC20(profitTaker.token()).balanceOf(address(recipient)), 100 ether);
+        assertEq(
+            IERC20(profitTaker.token()).balanceOf(address(recipient)),
+            100 ether
+        );
     }
 
     function testDepositRebalanceAndWithdraw() public {
@@ -75,7 +93,10 @@ contract ProfitTakerTest is Test {
         profitTaker.withdraw(profitTaker.balanceOfUnderlying());
 
         assertEq(vault.balanceOf(address(profitTaker)), 0);
-        assertEq(IERC20(profitTaker.token()).balanceOf(address(manager)), previousBalance);
+        assertEq(
+            IERC20(profitTaker.token()).balanceOf(address(manager)),
+            previousBalance
+        );
         vm.stopPrank();
     }
 
@@ -88,7 +109,10 @@ contract ProfitTakerTest is Test {
         assertEq(vault.balanceOf(address(profitTaker)), 0);
         IERC20(dai).approve(address(profitTaker), type(uint256).max);
         profitTaker.deposit(depositAmount);
-        assertGe(vault.convertToAssets(vault.balanceOf(address(profitTaker)))+10, depositAmount);
+        assertGe(
+            vault.convertToAssets(vault.balanceOf(address(profitTaker))) + 10,
+            depositAmount
+        );
 
         vm.stopPrank();
 
@@ -102,7 +126,10 @@ contract ProfitTakerTest is Test {
         profitTaker.rebalance();
 
         assertEq(vault.balanceOf(address(profitTaker)), 0);
-        assertGe(IERC20(profitTaker.token()).balanceOf(address(recipient))+10, 500 ether);
+        assertGe(
+            IERC20(profitTaker.token()).balanceOf(address(recipient)) + 10,
+            500 ether
+        );
 
         assertFalse(profitTaker.rebalanceTrigger());
     }
@@ -128,7 +155,7 @@ contract ProfitTakerTest is Test {
 
         deal(address(ajna), address(profitTaker), 1 ether);
         deal(address(weth), address(profitTaker), 1 ether);
-        
+
         address[] memory tokens = new address[](2);
         uint256[] memory balances = new uint256[](2);
 
